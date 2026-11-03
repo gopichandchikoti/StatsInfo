@@ -22,7 +22,7 @@
 
         <!-- Settings List -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="14">
+            <StackPanel>
 
                 <!-- Opacity -->
                 <TextBlock Text="Opacity" FontWeight="SemiBold"/>

@@ -1,5 +1,24 @@
+# .NET build output
 bin/
 obj/
+TestResults/
+coverage/
+artifacts/
+
+# IDE state
 .vs/
+.idea/
 *.user
 *.suo
+*.userosscache
+*.sln.docstates
+
+# Test and diagnostic output
+*.coverage
+*.coveragexml
+*.log
+
+# OS metadata
+.DS_Store
+Thumbs.db
+Desktop.ini

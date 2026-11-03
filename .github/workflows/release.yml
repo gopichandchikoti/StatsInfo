@@ -1,0 +1,47 @@
+name: Publish Windows release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install Inno Setup
+        run: choco install innosetup --yes --no-progress
+
+      - name: Test
+        run: dotnet test StatsInfo.sln --configuration Release
+
+      - name: Publish self-contained Windows app
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF_NAME.TrimStart('v')
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "Release tag must use vMAJOR.MINOR.PATCH, for example v1.0.0." }
+          dotnet publish src\StatsInfo\StatsInfo.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true "-p:Version=$version" --output artifacts\publish\win-x64
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF_NAME.TrimStart('v')
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "/DAppVersion=$version" installer\StatsInfo.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item "artifacts\installer\StatsInfo-Setup-$version.exe" "artifacts\installer\StatsInfo-Setup.exe"
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$env:GITHUB_REF_NAME" artifacts\installer\StatsInfo-Setup.exe --title "StatsInfo $($env:GITHUB_REF_NAME.TrimStart('v'))" --generate-notes
