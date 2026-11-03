@@ -10,15 +10,21 @@ public class SettingsService
     private AppSettings _currentSettings;
 
     public AppSettings Settings => _currentSettings;
+    public string SettingsPath => _settingsPath;
+    public string? LastError { get; private set; }
+    public bool LastSaveSucceeded { get; private set; } = true;
 
     public event Action<AppSettings>? SettingsChanged;
 
-    public SettingsService()
+    public SettingsService(string? settingsPath = null, string? applicationDataDirectory = null)
     {
-        string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        string folder = Path.Combine(appData, "StatsInfo");
+        string folder = settingsPath == null
+            ? Path.Combine(
+                applicationDataDirectory ?? Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "StatsInfo")
+            : Path.GetDirectoryName(Path.GetFullPath(settingsPath))!;
         Directory.CreateDirectory(folder);
-        _settingsPath = Path.Combine(folder, "settings.json");
+        _settingsPath = settingsPath == null ? Path.Combine(folder, "settings.json") : Path.GetFullPath(settingsPath);
 
         _currentSettings = LoadSettings();
     }
@@ -29,31 +35,46 @@ public class SettingsService
         {
             try
             {
+                if (new FileInfo(_settingsPath).Length > 4 * 1024 * 1024)
+                    throw new JsonException("Settings exceed the 4 MiB size limit.");
                 string json = File.ReadAllText(_settingsPath);
                 var loaded = JsonSerializer.Deserialize<AppSettings>(json);
-                if (loaded != null) return loaded;
+                if (loaded != null)
+                {
+                    MetricSettings.Normalize(loaded);
+                    return loaded;
+                }
             }
-            catch
+            catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
             {
-                // Fallback to default on corrupted file
+                LastError = $"Settings could not be read ({ex.GetType().Name}); original file retained.";
             }
         }
 
-        return new AppSettings();
+        var defaults = new AppSettings();
+        MetricSettings.Normalize(defaults);
+        return defaults;
     }
 
     public void SaveSettings(AppSettings settings)
     {
         _currentSettings = settings;
+        MetricSettings.Normalize(settings);
+        LastSaveSucceeded = false;
         try
         {
+            if (File.Exists(_settingsPath) && !File.Exists(_settingsPath + ".pre-v2.bak"))
+                File.Copy(_settingsPath, _settingsPath + ".pre-v2.bak");
             string json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(_settingsPath, json);
+            File.WriteAllText(_settingsPath + ".tmp", json);
+            File.Move(_settingsPath + ".tmp", _settingsPath, true);
+            LastSaveSucceeded = true;
+            LastError = null;
             SettingsChanged?.Invoke(_currentSettings);
         }
-        catch
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
         {
-            // Settings persistence failure handled gracefully
+            LastError = $"Settings could not be saved ({ex.GetType().Name}).";
         }
     }
 }

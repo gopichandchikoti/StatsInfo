@@ -1,75 +1,103 @@
 <Window x:Class="StatsInfo.Views.SettingsWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="StatsInfo Settings"
-        Icon="Assets/StatsInfo.ico"
-        Height="480"
-        Width="420"
-        WindowStartupLocation="CenterScreen"
-        ResizeMode="NoResize"
-        Background="#181825"
-        Foreground="#CDD6F4"
-        FontFamily="Segoe UI, Inter, Arial">
-
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
-        <!-- Header -->
-        <TextBlock Grid.Row="0" Text="Overlay Preferences" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
-
-        <!-- Settings List -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel>
-
-                <!-- Opacity -->
-                <TextBlock Text="Opacity" FontWeight="SemiBold"/>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="50"/>
-                    </Grid.ColumnDefinitions>
-                    <Slider Grid.Column="0" Minimum="0.2" Maximum="1.0" Value="{Binding Opacity}" TickFrequency="0.05" IsSnapToTickEnabled="True"/>
-                    <TextBlock Grid.Column="1" Text="{Binding Opacity, StringFormat={}{0:P0}}" HorizontalAlignment="Right"/>
-                </Grid>
-
-                <!-- Update Interval -->
-                <TextBlock Text="Update Interval (ms)" FontWeight="SemiBold" Margin="0,8,0,0"/>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="50"/>
-                    </Grid.ColumnDefinitions>
-                    <Slider Grid.Column="0" Minimum="500" Maximum="5000" Value="{Binding UpdateIntervalMs}" TickFrequency="250" IsSnapToTickEnabled="True"/>
-                    <TextBlock Grid.Column="1" Text="{Binding UpdateIntervalMs}" HorizontalAlignment="Right"/>
-                </Grid>
-
-                <Separator Background="#313244" Margin="0,8"/>
-
-                <!-- Options -->
-                <CheckBox Content="Always on Top" IsChecked="{Binding AlwaysOnTop}" Foreground="#CDD6F4" Margin="0,4"/>
-                <CheckBox Content="Click-Through Mode" IsChecked="{Binding ClickThrough}" Foreground="#CDD6F4" Margin="0,4"/>
-
-                <Separator Background="#313244" Margin="0,8"/>
-
-                <!-- Visible Metrics -->
-                <TextBlock Text="Visible Metrics" FontWeight="SemiBold"/>
-                <CheckBox Content="Show CPU Usage &amp; Clock" IsChecked="{Binding ShowCpu}" Foreground="#CDD6F4" Margin="0,4"/>
-                <CheckBox Content="Show GPU Usage &amp; Temp" IsChecked="{Binding ShowGpu}" Foreground="#CDD6F4" Margin="0,4"/>
-                <CheckBox Content="Show RAM Usage" IsChecked="{Binding ShowRam}" Foreground="#CDD6F4" Margin="0,4"/>
-                <CheckBox Content="Show Network Throughput" IsChecked="{Binding ShowNetwork}" Foreground="#CDD6F4" Margin="0,4"/>
-                <CheckBox Content="Show Display Refresh Rate (Hz)" IsChecked="{Binding ShowDisplayHz}" Foreground="#CDD6F4" Margin="0,4"/>
-
-            </StackPanel>
-        </ScrollViewer>
-
-        <!-- Actions -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="Cancel" Command="{Binding CancelCommand}" Width="80" Height="30" Margin="0,0,10,0" Background="#313244" Foreground="#CDD6F4" BorderThickness="0"/>
-            <Button Content="Save" Command="{Binding SaveCommand}" Width="80" Height="30" Background="#89B4FA" Foreground="#11111B" FontWeight="SemiBold" BorderThickness="0"/>
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="StatsInfo Settings" Icon="pack://application:,,,/StatsInfo;component/Assets/StatsInfo.ico"
+ Width="1080" Height="760" MinWidth="840" MinHeight="560" WindowStartupLocation="CenterScreen"
+ Background="{DynamicResource PageBackground}" Foreground="{DynamicResource PageForeground}"
+ FontFamily="Segoe UI" FontSize="13">
+ <Window.Resources><ResourceDictionary>
+  <ResourceDictionary.MergedDictionaries>
+   <ResourceDictionary Source="SettingsStyles.xaml"/>
+  </ResourceDictionary.MergedDictionaries>
+ </ResourceDictionary></Window.Resources>
+ <Grid Margin="22">
+  <Grid.RowDefinitions>
+   <RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/>
+  </Grid.RowDefinitions>
+  <DockPanel Margin="0,0,0,18">
+   <TextBlock Text="StatsInfo 2" FontSize="24" FontWeight="SemiBold"/>
+   <TextBlock Text="Windows monitoring · local by default" HorizontalAlignment="Right"
+    VerticalAlignment="Center" Foreground="{DynamicResource MutedForeground}"/>
+  </DockPanel>
+  <TabControl x:Name="Navigation" Grid.Row="1" TabStripPlacement="Left"
+   SelectionChanged="Navigation_Changed" Background="{DynamicResource PageBackground}" BorderBrush="#45475A">
+   <TabItem Header="Visible Metrics">
+    <Grid Margin="20,14">
+     <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/>
+     </Grid.RowDefinitions>
+     <StackPanel>
+      <TextBlock Text="Visible Metrics" Style="{StaticResource SectionTitle}"/>
+      <TextBlock Text="Changes save immediately. Right-click an overlay reading for history."
+       Style="{StaticResource Hint}"/>
+      <DockPanel>
+       <ComboBox DockPanel.Dock="Right" Width="130" ItemsSource="{Binding AvailabilityOptions}"
+        SelectedItem="{Binding Availability}" AutomationProperties.Name="Metric availability filter"/>
+       <TextBox Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"
+        AutomationProperties.Name="Search metrics" ToolTip="Search by name, identifier or description"/>
+      </DockPanel>
+     </StackPanel>
+     <WrapPanel Grid.Row="1" Margin="0,0,0,8">
+      <ComboBox x:Name="GroupSelection" Width="150" ItemsSource="{Binding Groups}" SelectedIndex="0"
+       AutomationProperties.Name="Metric group"/>
+      <Button Content="Show group" Click="ShowGroup_Click"/>
+      <Button Content="Hide group" Click="HideGroup_Click"/>
+      <ComboBox x:Name="PresetSelection" Width="130" ItemsSource="{Binding PresetNames}" SelectedIndex="5"
+       AutomationProperties.Name="Overlay preset"/>
+      <Button Content="Apply preset…" Click="ApplyPreset_Click"/>
+     </WrapPanel>
+     <ListView Grid.Row="2" ItemsSource="{Binding MetricsView}" Background="Transparent" BorderThickness="0"
+      Foreground="{DynamicResource PageForeground}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+      VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+      ScrollViewer.CanContentScroll="True" HorizontalContentAlignment="Stretch">
+      <ListView.GroupStyle><GroupStyle><GroupStyle.HeaderTemplate><DataTemplate>
+       <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" Margin="0,16,0,8"/>
+      </DataTemplate></GroupStyle.HeaderTemplate></GroupStyle></ListView.GroupStyle>
+      <ListView.ItemTemplate><DataTemplate>
+       <Grid Margin="0,5,0,9" ToolTip="{Binding Tooltip}">
+        <Grid.ColumnDefinitions>
+         <ColumnDefinition Width="*"/><ColumnDefinition Width="108"/><ColumnDefinition Width="100"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel>
+         <CheckBox Content="{Binding Label}" IsChecked="{Binding IsEnabled}"
+          AutomationProperties.Name="{Binding Label}" FontWeight="SemiBold"/>
+         <TextBlock Text="{Binding Description}" TextWrapping="Wrap" FontSize="11" MaxWidth="340"
+          HorizontalAlignment="Left" Foreground="{DynamicResource MutedForeground}"/>
+         <TextBlock Text="{Binding Source}" TextTrimming="CharacterEllipsis" FontSize="10" MaxWidth="340"
+          HorizontalAlignment="Left" Foreground="{DynamicResource MutedForeground}"/>
+         <TextBlock Text="{Binding AvailabilityReason}" TextWrapping="Wrap" FontSize="11" MaxWidth="340"
+          HorizontalAlignment="Left" Foreground="{DynamicResource MutedForeground}"/>
+         <TextBox Text="{Binding CustomLabel, UpdateSourceTrigger=LostFocus}" Width="170"
+          HorizontalAlignment="Left" ToolTip="Optional overlay label" AutomationProperties.Name="Custom metric label"/>
         </StackPanel>
+        <StackPanel Grid.Column="1">
+         <TextBlock Text="{Binding Status}" FontSize="11" Margin="0,8,0,4"/>
+         <ComboBox ItemsSource="{Binding UnitOptions}" SelectedItem="{Binding Unit}"
+          AutomationProperties.Name="Metric unit"/>
+         <ComboBox ItemsSource="{Binding RoundingOptions}" SelectedValue="{Binding Decimals}"
+          DisplayMemberPath="Label" SelectedValuePath="Value" AutomationProperties.Name="Metric rounding"/>
+         <TextBlock Text="{Binding ValueText}" TextTrimming="CharacterEllipsis" FontSize="11"/>
+         <CheckBox Content="Trend" IsChecked="{Binding ShowSparkline}" ToolTip="Optional numeric mini graph"/>
+        </StackPanel>
+        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
+         <Button Content="↑" Tag="{Binding}" Click="MoveUp_Click" ToolTip="Move earlier"
+          AutomationProperties.Name="Move metric earlier" Padding="5"/>
+         <Button Content="↓" Tag="{Binding}" Click="MoveDown_Click" ToolTip="Move later"
+          AutomationProperties.Name="Move metric later" Padding="5"/>
+         <Button Content="↺" Tag="{Binding}" Click="ResetMetric_Click" ToolTip="Reset this metric"
+          AutomationProperties.Name="Reset metric" Padding="4"/>
+        </StackPanel>
+       </Grid>
+      </DataTemplate></ListView.ItemTemplate>
+     </ListView>
     </Grid>
+   </TabItem>
+  </TabControl>
+  <DockPanel Grid.Row="2" Margin="0,16,0,0">
+   <Button DockPanel.Dock="Right" Content="Apply settings" Click="ApplySettings_Click" MinWidth="110"/>
+   <Button DockPanel.Dock="Right" Content="Close" Command="{Binding CancelCommand}" MinWidth="80"/>
+   <TextBlock x:Name="SaveState" Text="Visibility saves immediately. Apply other changes here."
+    VerticalAlignment="Center" TextWrapping="Wrap"/>
+  </DockPanel>
+ </Grid>
 </Window>

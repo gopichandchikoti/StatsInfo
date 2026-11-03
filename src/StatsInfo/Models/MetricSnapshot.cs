@@ -9,10 +9,16 @@ public record MetricSnapshot(
     MetricStatus Status,
     string Source,
     string? ErrorCode = null,
-    string? FormattedOverride = null
+    string? FormattedOverride = null,
+    double? SecondaryValue = null,
+    string? SecondaryUnit = null,
+    MetricStatus? SecondaryStatus = null
 )
 {
     public string FormattedValue => FormattedOverride ?? $"{Value:F1} {Unit}".Trim();
+
+    public string? SecondaryFormattedValue =>
+        SecondaryValue.HasValue ? $"{SecondaryValue.Value:F0} {SecondaryUnit}".Trim() : null;
 
     public bool IsFresh(TimeSpan maxAge) =>
         DateTime.UtcNow - Timestamp <= maxAge && Status == MetricStatus.Active;

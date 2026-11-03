@@ -7,6 +7,7 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <UseWPF>true</UseWPF>
+    <ExcludeByFile>**/CpuCollector.cs,**/CpuTemperatureCollector.cs,**/DisplayModeCollector.cs,**/GpuCollector.cs,**/MemoryCollector.cs,**/NetworkCollector.cs,**/NativeInterop.cs,**/App.xaml.cs,**/App.xaml,**/obj/**/*.cs</ExcludeByFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,15 +17,17 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="coverlet.collector" Version="6.0.0">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    <PackageReference Include="coverlet.msbuild" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Moq" Version="4.20.70" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\StatsInfo\StatsInfo.csproj" />
+    <None Include="..\Fixtures\PresentMonFixture.cs" Link="Fixtures\PresentMonFixture.cs"
+          CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

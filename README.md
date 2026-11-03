@@ -2,6 +2,32 @@
 
 A lightweight, native Windows 10/11 desktop overlay displaying live CPU, GPU, RAM, network throughput, and display refresh rate statistics.
 
+## Version 2 local preview
+
+The existing WPF app now has all **70 specified metrics** in Visible Metrics, with source/quality/N/A
+reasons, preserved visibility settings, ordering, units, rounding, presets and optional sparklines.
+It adds local Windows collectors, layouts and monitor placement, tray/hotkey recovery, bounded
+history/export, sustained alerts, and an experimental user-supplied PresentMon adapter.
+
+Launch the source build locally with Settings open:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\run-local.ps1
+```
+
+The script uses the local .NET 8 SDK when PATH finds an older .NET host. It does not push or install
+anything. To run a separate settings profile, add `-ProfilePath artifacts\qa\review\settings.json`.
+
+Actual build outputs for this preview:
+
+- Portable: `artifacts\publish\win-x64-v2\StatsInfo.exe`
+- Unsigned installer: `artifacts\installer\StatsInfo-Setup-2.0.0.exe`
+
+See [implementation and limitations](docs/v2-implementation.md), the
+[complete metric matrix](docs/v2-feature-matrix.md), and the [Windows validation report](docs/v2-validation.md).
+Some sensor sources remain hardware dependent or deferred; actual game FPS has not been validated.
+The existing release download below is unchanged and is not automatically updated by these local builds.
+
 ## Download and install
 
 **[Download the latest StatsInfo Windows installer](https://github.com/gopichandchikoti/StatsInfo/releases/latest/download/StatsInfo-Setup.exe)**
@@ -14,11 +40,11 @@ The download becomes available after the first versioned release is published. T
 
 ## Features
 - **Always-on-top floating HUD:** Translucent, draggable, customizable two-row overlay with Settings and Close controls
-- **Hardware sensors:** Real-time CPU%, GPU load & temp, physical RAM consumption
+- **Hardware sensors:** Real-time CPU load and supported package temperature, GPU load and supported core temperature, physical RAM consumption
 - **Network throughput & uptime:** Live download/upload bandwidth deltas and system uptime
 - **Display Hz:** Active monitor configured refresh rate detection
 - **Application icon:** Custom StatsInfo icon embedded in the executable
-- **Settings:** Custom opacity, update rates, and per-metric toggles
+- **Settings:** Custom opacity and update rates, with independent CPU/GPU usage and temperature visibility toggles
 
 ## Build & Run
 ```powershell
@@ -54,6 +80,13 @@ git push origin v1.0.0
 The release workflow derives the application and installer versions from the tag. Ensure the tag has not already been used; use the next version for each release.
 
 ## Running Tests
+
+Run the unit and UI regression tests with a 90% minimum line-coverage gate:
+
 ```powershell
-dotnet test
+dotnet test StatsInfo.sln -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=90 /p:ThresholdType=line /p:ThresholdStat=total
 ```
+
+The Windows CI workflow runs this gate on every push and pull request. Release publishing also requires it to pass. Run the same command before pushing changes. If a regression test fails, fix the behavior rather than weakening or removing the test; change a regression test only when the intended behavior is deliberately changed. Configure the `StatsInfo CI / build-and-test` check as required in GitHub branch protection if failed checks must block merging.
+
+Coverage excludes hardware-dependent sensor collectors, native interop, application startup wiring, and generated WPF build files. These platform integrations are nondeterministic or generated; application behavior and UI regression paths remain covered by unit and WPF tests.

@@ -27,7 +27,7 @@ public static class NativeInterop
     [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
     public static extern bool GlobalMemoryStatusEx([In, Out] MEMORYSTATUSEX lpBuffer);
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     public struct DEVMODE
     {
         private const int CCHDEVICENAME = 32;
@@ -69,7 +69,7 @@ public static class NativeInterop
 
     public const int ENUM_CURRENT_SETTINGS = -1;
 
-    [DllImport("user32.dll")]
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, EntryPoint = "EnumDisplaySettingsW")]
     public static extern bool EnumDisplaySettings(string? lpszDeviceName, int iModeNum, ref DEVMODE lpDevMode);
 
     // Window styles for click-through

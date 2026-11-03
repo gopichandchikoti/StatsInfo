@@ -19,12 +19,22 @@ public partial class App : Application
             .ConfigureServices((_, services) =>
             {
                 // Services & Collectors
-                services.AddSingleton<SettingsService>();
-                services.AddSingleton<IMetricCollector, CpuCollector>();
-                services.AddSingleton<IMetricCollector, MemoryCollector>();
-                services.AddSingleton<IMetricCollector, NetworkCollector>();
-                services.AddSingleton<IMetricCollector, DisplayModeCollector>();
-                services.AddSingleton<IMetricCollector, GpuCollector>();
+                string? settingsPath = null;
+                int option = Array.IndexOf(e.Args, "--settings");
+                if (option >= 0 && option + 1 < e.Args.Length) settingsPath = e.Args[option + 1];
+                services.AddSingleton(new SettingsService(settingsPath));
+                services.AddSingleton(sp =>
+                {
+                    var settings = sp.GetRequiredService<SettingsService>();
+                    return new MetricRuntime(settings, new IMetricSource[]
+                    {
+                        new CpuMemorySource("CPU"), new CpuMemorySource("Memory"), new GpuEngineSource(),
+                        new HardwareSensorSource(), new StorageMetricsSource(),
+                        new NetworkMetricsSource(settings.SettingsPath), new LatencyMetricsSource(),
+                        new DisplayMetricsSource(), new PowerMetricsSource(), new ProcessMetricsSource(),
+                        new PresentMonSource()
+                    });
+                });
 
                 services.AddSingleton<SamplingCoordinator>();
 
@@ -38,12 +48,23 @@ public partial class App : Application
             .Build();
 
         // Start metric sampling
-        var coordinator = _host.Services.GetRequiredService<SamplingCoordinator>();
-        coordinator.Start();
+        var runtime = _host.Services.GetRequiredService<MetricRuntime>();
+        runtime.Start();
 
         // Show overlay window
         var mainWindow = _host.Services.GetRequiredService<MainWindow>();
         mainWindow.Show();
+        if (e.Args.Contains("--settings-window")) mainWindow.ShowSettings();
+        int captureOption = Array.IndexOf(e.Args, "--verify");
+        if (captureOption >= 0 && captureOption + 1 < e.Args.Length)
+            _ = VerifyAsync(e.Args[captureOption + 1], mainWindow, runtime);
+    }
+
+    private static async Task VerifyAsync(string directory, MainWindow window, MetricRuntime runtime)
+    {
+        try { await LocalVerification.CaptureAsync(directory, window, runtime); }
+        catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException or InvalidOperationException)
+        { MessageBox.Show($"Local verification failed: {ex.GetType().Name}", "StatsInfo"); }
     }
 
     protected override void OnExit(ExitEventArgs e)

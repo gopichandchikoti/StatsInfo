@@ -57,17 +57,39 @@ public class GpuCollector : IMetricCollector
 
             foreach (var sensor in _gpuHardware.Sensors)
             {
+                if (sensor.Value is not float sensorValue || !float.IsFinite(sensorValue))
+                {
+                    continue;
+                }
+
                 if (sensor.SensorType == SensorType.Load && sensor.Name.Contains("Core", StringComparison.OrdinalIgnoreCase))
                 {
-                    gpuLoad ??= sensor.Value;
+                    gpuLoad ??= sensorValue;
                 }
                 else if (sensor.SensorType == SensorType.Temperature && sensor.Name.Contains("Core", StringComparison.OrdinalIgnoreCase))
                 {
-                    gpuTemp ??= sensor.Value;
+                    gpuTemp ??= sensorValue;
                 }
             }
 
-            double loadVal = gpuLoad.HasValue ? Math.Round(gpuLoad.Value, 0) : 0;
+            if (gpuLoad is null)
+            {
+                return Task.FromResult(new MetricSnapshot(
+                    Key,
+                    DisplayName,
+                    0,
+                    "%",
+                    DateTime.UtcNow,
+                    MetricStatus.Unavailable,
+                    Source,
+                    "GpuLoadSensorNotDetected",
+                    "N/A",
+                    gpuTemp,
+                    "°C",
+                    gpuTemp.HasValue ? MetricStatus.Active : MetricStatus.Unavailable));
+            }
+
+            double loadVal = Math.Round(gpuLoad.Value, 0);
             string tempStr = gpuTemp.HasValue ? $"{gpuTemp.Value:F0}°C" : "N/A";
             string formatted = $"{loadVal:F0}% · {tempStr}";
 
@@ -79,7 +101,10 @@ public class GpuCollector : IMetricCollector
                 Timestamp: DateTime.UtcNow,
                 Status: MetricStatus.Active,
                 Source: $"{Source} ({_gpuHardware.Name})",
-                FormattedOverride: formatted
+                FormattedOverride: formatted,
+                SecondaryValue: gpuTemp,
+                SecondaryUnit: "°C",
+                SecondaryStatus: gpuTemp.HasValue ? MetricStatus.Active : MetricStatus.Unavailable
             ));
         }
         catch (Exception ex)

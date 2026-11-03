@@ -13,7 +13,8 @@ public class SamplingCoordinator : IDisposable
 
     public event Action<IReadOnlyDictionary<string, MetricSnapshot>>? MetricsUpdated;
     public int IntervalMs { get; set; } = 1000;
-    public bool IsRunning => _samplingTask != null && !_samplingTask.IsCompleted;
+    public bool IsRunning =>
+        _cts is { IsCancellationRequested: false } && _samplingTask is { IsCompleted: false };
 
     public SamplingCoordinator(IEnumerable<IMetricCollector> collectors)
     {

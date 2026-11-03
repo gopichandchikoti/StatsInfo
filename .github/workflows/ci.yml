@@ -2,9 +2,7 @@ name: StatsInfo CI
 
 on:
   push:
-    branches: [ main, master ]
   pull_request:
-    branches: [ main, master ]
 
 jobs:
   build-and-test:
@@ -24,4 +22,4 @@ jobs:
       run: dotnet build StatsInfo.sln --configuration Release --no-restore
 
     - name: Test
-      run: dotnet test StatsInfo.sln --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage"
+      run: dotnet test StatsInfo.sln --configuration Release --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=90 /p:ThresholdType=line /p:ThresholdStat=total
