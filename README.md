@@ -13,10 +13,11 @@ The installer supports 64-bit Windows 10/11. Download and open `StatsInfo-Setup.
 The download becomes available after the first versioned release is published. To publish a release, push a version tag such as `v1.0.0`; GitHub Actions builds the self-contained app, packages it with Inno Setup, and attaches `StatsInfo-Setup.exe` to the release. Future releases use the same download link.
 
 ## Features
-- **Always-on-top floating HUD:** Translucent, draggable, customizable bar
+- **Always-on-top floating HUD:** Translucent, draggable, customizable two-row overlay with Settings and Close controls
 - **Hardware sensors:** Real-time CPU%, GPU load & temp, physical RAM consumption
-- **Network throughput:** Live download/upload bandwidth deltas
+- **Network throughput & uptime:** Live download/upload bandwidth deltas and system uptime
 - **Display Hz:** Active monitor configured refresh rate detection
+- **Application icon:** Custom StatsInfo icon embedded in the executable
 - **Settings:** Custom opacity, update rates, and per-metric toggles
 
 ## Build & Run

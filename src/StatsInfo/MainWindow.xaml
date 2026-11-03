@@ -7,8 +7,9 @@
         xmlns:converters="clr-namespace:StatsInfo.Converters"
         mc:Ignorable="d"
         Title="StatsInfo Overlay"
-        Height="36"
-        Width="640"
+        Icon="Assets/StatsInfo.ico"
+        Height="72"
+        Width="780"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -26,14 +27,18 @@
             BorderThickness="1"
             CornerRadius="18"
             Opacity="{Binding Opacity}"
-            Padding="14,0">
+            Padding="18,5">
         <Border.Effect>
             <DropShadowEffect BlurRadius="12" Direction="270" ShadowDepth="2" Opacity="0.4" Color="#000000"/>
         </Border.Effect>
 
         <Grid VerticalAlignment="Center">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <!-- CPU -->
                 <TextBlock Text="{Binding CpuText}" 
                            Foreground="#A6E3A1" 
@@ -68,17 +73,6 @@
 
                 <TextBlock Text=" | " Foreground="#585B70" VerticalAlignment="Center" Margin="8,0"/>
 
-                <!-- Network -->
-                <TextBlock Text="{Binding NetworkText}" 
-                           Foreground="#F9E2AF" 
-                           FontWeight="SemiBold" 
-                           FontSize="12" 
-                           FontFamily="Segoe UI, Inter, Arial"
-                           VerticalAlignment="Center"
-                           Visibility="{Binding ShowNetwork, Converter={StaticResource BoolToVis}}"/>
-
-                <TextBlock Text=" | " Foreground="#585B70" VerticalAlignment="Center" Margin="8,0"/>
-
                 <!-- Display Hz -->
                 <TextBlock Text="{Binding DisplayHzText}" 
                            Foreground="#CBA6F7" 
@@ -87,20 +81,65 @@
                            FontFamily="Segoe UI, Inter, Arial"
                            VerticalAlignment="Center"
                            Visibility="{Binding ShowDisplayHz, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
 
-                <!-- Settings Gear Button -->
+            <Grid Grid.Row="1" Margin="0,3,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           Text="{Binding NetworkText}"
+                           Foreground="#F9E2AF"
+                           FontWeight="SemiBold"
+                           FontSize="11"
+                           FontFamily="Segoe UI, Inter, Arial"
+                           VerticalAlignment="Center"
+                           Visibility="{Binding ShowNetwork, Converter={StaticResource BoolToVis}}"/>
+
+                <TextBlock Grid.Column="1"
+                           Text="{Binding SystemUptimeText}"
+                           Foreground="#A6ADC8"
+                           FontSize="11"
+                           VerticalAlignment="Center"
+                           Margin="12,0,16,0"/>
+
                 <Button Command="{Binding OpenSettingsCommand}" 
+                        Grid.Column="2"
                         Background="Transparent" 
                         BorderThickness="0" 
                         Foreground="#BAC2DE" 
-                        FontSize="11"
+                        FontSize="15"
                         Cursor="Hand"
-                        Margin="12,0,0,0"
+                        Width="28"
+                        Height="24"
+                        Padding="0"
                         VerticalAlignment="Center"
-                        ToolTip="Settings">
+                        ToolTip="Settings"
+                        AutomationProperties.Name="Settings">
                     <TextBlock Text="⚙"/>
                 </Button>
-            </StackPanel>
+
+                <Button Grid.Column="3"
+                        Click="CloseButton_Click"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Foreground="#F38BA8"
+                        FontSize="17"
+                        Cursor="Hand"
+                        Width="28"
+                        Height="24"
+                        Padding="0"
+                        Margin="4,0,0,0"
+                        VerticalAlignment="Center"
+                        ToolTip="Close StatsInfo"
+                        AutomationProperties.Name="Close StatsInfo">
+                    <TextBlock Text="×"/>
+                </Button>
+            </Grid>
         </Grid>
     </Border>
 </Window>

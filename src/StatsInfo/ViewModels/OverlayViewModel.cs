@@ -15,6 +15,7 @@ public partial class OverlayViewModel : ObservableObject
     [ObservableProperty] private string _networkText = "NET —";
     [ObservableProperty] private string _gpuText = "GPU —";
     [ObservableProperty] private string _displayHzText = "Display —";
+    [ObservableProperty] private string _systemUptimeText = "UP —";
     [ObservableProperty] private double _opacity = 0.85;
     [ObservableProperty] private double _scale = 1.0;
     [ObservableProperty] private bool _isPinned = true;
@@ -50,6 +51,8 @@ public partial class OverlayViewModel : ObservableObject
 
     private void OnMetricsUpdated(IReadOnlyDictionary<string, MetricSnapshot> metrics)
     {
+        UpdateSystemUptime();
+
         if (metrics.TryGetValue("CPU_USAGE", out var cpu))
         {
             CpuText = $"CPU {cpu.FormattedValue}";
@@ -74,6 +77,14 @@ public partial class OverlayViewModel : ObservableObject
         {
             DisplayHzText = hz.FormattedValue;
         }
+    }
+
+    private void UpdateSystemUptime()
+    {
+        var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
+        SystemUptimeText = uptime.TotalDays >= 1
+            ? $"UP {uptime.Days}d {uptime.Hours:D2}h {uptime.Minutes:D2}m"
+            : $"UP {uptime.Hours:D2}h {uptime.Minutes:D2}m";
     }
 
     [RelayCommand]
