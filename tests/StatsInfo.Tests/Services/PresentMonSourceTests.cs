@@ -65,7 +65,13 @@ public class PresentMonSourceTests
         finally
         {
             source.Dispose();
-            if (target != null) { if (!target.HasExited) target.Kill(); target.Dispose(); }
+            if (target != null)
+            {
+                if (!target.HasExited) target.Kill();
+                // Kill requests termination; Windows can still hold the executable until exit completes.
+                await target.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5));
+                target.Dispose();
+            }
             Directory.Delete(dir, true);
         }
     }
