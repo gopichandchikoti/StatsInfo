@@ -20,7 +20,7 @@ public partial class SettingsWindow
         AddPanel("General", p =>
         {
             p.Check("Launch at Windows sign-in (current user, opt-in)", "StartWithWindows");
-            p.Hint("StatsInfo 2.0 · Windows 10/11 · unsigned local preview. No telemetry, automatic updates, " +
+            p.Hint($"StatsInfo {typeof(SettingsWindow).Assembly.GetName().Version?.ToString(3)} · Windows 10/11. No telemetry, automatic updates, " +
                 "bandwidth tests or cloud services. The tray remains available when the overlay is hidden.");
             p.Action("Recover overlay position and input", (_, _) => RecoveryRequested?.Invoke());
             p.Hint($"Settings and opt-in history: {_viewModel.Service.SettingsPath}\n" +
@@ -33,6 +33,8 @@ public partial class SettingsWindow
     private static void BuildAppearance(SettingsPanelBuilder p)
     {
         p.Choice("Layout", "Layout", new[] { "Horizontal", "Vertical", "Compact Gaming", "Expanded" });
+        p.Hint("Drag the overlay's bottom-right corner to resize. Metrics wrap automatically; " +
+            "the minimum size follows the visible metrics. Choosing another layout resets the saved size.");
         p.Choice("Theme", "Theme", new[] { "Dark", "Light", "System", "High Contrast" });
         p.Slider("Opacity (0.2–1; 1 is opaque)", "Opacity", 0.2, 1);
         p.Slider("Scale (0.75–2)", "Scale", 0.75, 2);

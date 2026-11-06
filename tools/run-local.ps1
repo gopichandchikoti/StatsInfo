@@ -34,8 +34,8 @@ try {
         $appArguments += '--verify "' + $verifyAbsolute + '"'
     }
     $appProcess = if ($appArguments.Count -gt 0) {
-        Start-Process -FilePath $appExecutable -ArgumentList ($appArguments -join ' ') -PassThru
-    } else { Start-Process -FilePath $appExecutable -PassThru }
+        Start-Process -FilePath $appExecutable -ArgumentList ($appArguments -join ' ') -WindowStyle Hidden -PassThru
+    } else { Start-Process -FilePath $appExecutable -WindowStyle Hidden -PassThru }
     Write-Output "StatsInfo started locally (PID $($appProcess.Id)). No commit or push was performed."
 }
 finally { Pop-Location }

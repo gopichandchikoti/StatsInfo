@@ -32,8 +32,9 @@ public partial class SettingsWindow : Window
         _dialogs = dialogs ?? new SettingsDialogs();
         _draft = CloneSettings(viewModel.Service.Settings);
         DataContext = viewModel;
-        viewModel.RequestClose += Close;
         BuildPanels();
+        // Subscribe only after construction succeeds, so a failed optional discovery cannot retain this window.
+        viewModel.RequestClose += Close;
         SaveState.Text = viewModel.Service.LastError ?? SaveState.Text;
         _timer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background,
             (_, _) => RefreshState(), Dispatcher);
@@ -100,6 +101,8 @@ public partial class SettingsWindow : Window
         var error = SettingsValidation.Validate(_draft);
         if (error != null) { SaveState.Text = error; return; }
         var current = _viewModel.Service.Settings;
+        _draft.OverlayWidth = _draft.Layout == current.Layout ? current.OverlayWidth : 0;
+        _draft.OverlayHeight = _draft.Layout == current.Layout ? current.OverlayHeight : 0;
         _draft.Metrics = current.Metrics;
         _draft.SavedCustomVisibility = current.SavedCustomVisibility;
         _draft.Preset = current.Preset;

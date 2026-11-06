@@ -25,7 +25,8 @@ public partial class SettingsWindow
 
     private void BuildNetwork(SettingsPanelBuilder p)
     {
-        p.Choice("Monitored network adapter", "AdapterId", NetworkMetricsSource.Adapters(), "Name", "Id");
+        p.Choice("Monitored network adapter", "AdapterId", OptionalDiscovery.Read(NetworkMetricsSource.Adapters,
+            new[] { new AdapterChoice("Auto", "Auto: active gateway adapter"), new AdapterChoice("All", "All adapters") }, p.Hint), "Name", "Id");
         p.Choice("Network unit", "NetworkUnit", new[] { "Mbps", "MB/s" });
         p.Hint("All adapters can double-count VPN/virtual traffic. These are live byte deltas, not a speed test.");
         p.Check("Enable periodic ICMP probes to my chosen endpoint", "LatencyEnabled");
@@ -59,9 +60,11 @@ public partial class SettingsWindow
         _sensorGpu = p.Choice("Sensor GPU", "SensorGpuName", new[] { "Auto" });
         _counterGpu = p.Choice("Monitored GPU (used when hardware sensors are off)", "GpuAdapter",
             new[] { new AdapterChoice("Auto", "Auto: first available GPU") }, "Name", "Id");
-        p.Choice("Physical disk for throughput", "DiskInstance", new[] { "Auto" }.Concat(StorageMetricsSource.DiskInstances()));
-        p.Choice("Volume for free space", "Volume", DriveInfo.GetDrives().Where(d => d.DriveType == DriveType.Fixed)
-            .Select(d => d.Name).ToArray());
+        p.Choice("Physical disk for throughput", "DiskInstance", OptionalDiscovery.Read(
+            () => new[] { "Auto" }.Concat(StorageMetricsSource.DiskInstances()), new[] { "Auto" }, p.Hint));
+        p.Choice("Volume for free space", "Volume", OptionalDiscovery.Read(
+            () => DriveInfo.GetDrives().Where(d => d.DriveType == DriveType.Fixed).Select(d => d.Name),
+            new[] { _draft.Volume }, p.Hint));
         _sensorDrive = p.Choice("Drive for temperature/endurance sensors", "StorageSensorName", new[] { "Auto" });
         _cpuFan = p.Choice("CPU fan sensor", "SensorSelections[cpu.fan.rpm]", Array.Empty<KeyValuePair<string, string>>(), "Value", "Key");
         _boardTemperature = p.Choice("Motherboard temperature sensor", "SensorSelections[system.motherboard.temperature]",

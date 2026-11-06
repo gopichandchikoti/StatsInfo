@@ -41,7 +41,29 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Copy-Item "artifacts\installer\StatsInfo-Setup-$version.exe" "artifacts\installer\StatsInfo-Setup.exe"
 
+      - name: Verify packaged settings and responsive overlay
+        shell: pwsh
+        run: |
+          $qaDirectory = Join-Path $PWD 'artifacts\qa\release-smoke'
+          $app = Start-Process -FilePath 'artifacts\publish\win-x64\StatsInfo.exe' -ArgumentList "--smoke-test `"$qaDirectory`"" -WindowStyle Hidden -PassThru
+          if (-not $app.WaitForExit(60000)) { $app.Kill(); throw 'Packaged app verification timed out.' }
+          if ($app.ExitCode -ne 0 -or -not (Test-Path "$qaDirectory\smoke-test.json")) {
+            if (Test-Path "$qaDirectory\smoke-test-error.txt") { Get-Content "$qaDirectory\smoke-test-error.txt" }
+            throw 'Packaged app verification failed.'
+          }
+
+      - name: Keep package verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: packaged-app-verification
+          path: artifacts/qa/release-smoke
+
+      - name: Package portable download
+        shell: pwsh
+        run: Compress-Archive -Path artifacts\publish\win-x64\* -DestinationPath artifacts\installer\StatsInfo-Portable-win-x64.zip
+
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$env:GITHUB_REF_NAME" artifacts\installer\StatsInfo-Setup.exe --title "StatsInfo $($env:GITHUB_REF_NAME.TrimStart('v'))" --generate-notes
+        run: gh release create "$env:GITHUB_REF_NAME" artifacts\installer\StatsInfo-Setup.exe artifacts\installer\StatsInfo-Portable-win-x64.zip --title "StatsInfo $($env:GITHUB_REF_NAME.TrimStart('v'))" --generate-notes

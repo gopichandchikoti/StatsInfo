@@ -176,6 +176,7 @@ public partial class MainWindow
     private void CleanupShell()
     {
         _viewModel.Settings.SettingsChanged -= SettingsChanged;
+        MetricItems.LayoutUpdated -= MetricItems_LayoutUpdated;
         _viewModel.DisposeV2();
         _shellTimer?.Stop();
         _settingsWindow?.Close();

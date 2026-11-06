@@ -27,6 +27,7 @@ public partial class MainWindow : Window
 
         Loaded += OnLoaded;
         viewModel.Settings.SettingsChanged += SettingsChanged;
+        MetricItems.LayoutUpdated += MetricItems_LayoutUpdated;
         Closed += (_, _) => CleanupShell();
     }
 
@@ -69,12 +70,26 @@ public partial class MainWindow : Window
 
     public void ShowSettings()
     {
-        if (_settingsWindow == null || !_settingsWindow.IsLoaded)
+        if (_settingsWindow == null)
         {
-            _settingsWindow = new SettingsWindow(_settingsViewModel, _viewModel.Runtime);
-            _settingsWindow.RecoveryRequested += RecoverOverlay;
-            _settingsWindow.Closed += (_, _) => _settingsWindow = null;
-            _settingsWindow.Show();
+            try
+            {
+                var window = new SettingsWindow(_settingsViewModel, _viewModel.Runtime);
+                window.RecoveryRequested += RecoverOverlay;
+                window.Closed += (_, _) => _settingsWindow = null;
+                _settingsWindow = window;
+                window.Show();
+            }
+            catch (Exception ex) when (ex is System.Windows.Markup.XamlParseException
+                or InvalidOperationException or System.ComponentModel.Win32Exception
+                or System.IO.IOException or UnauthorizedAccessException)
+            {
+                _settingsWindow?.Close();
+                _settingsWindow = null;
+                MessageBox.Show(this, $"Settings could not open ({ex.GetType().Name}). " +
+                    "The overlay is still running. Restart StatsInfo using the latest installer.",
+                    "StatsInfo Settings", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
         else
         {
@@ -99,24 +114,10 @@ public partial class MainWindow : Window
         Resources["MetricSpacing"] = new Thickness(0, 0, s.MetricSpacing, 0);
         OverlayBorder.LayoutTransform = new ScaleTransform(s.Scale, s.Scale);
         OverlayBorder.Padding = s.Density == "Compact" ? new Thickness(6, 3, 6, 3) : new Thickness(12, 6, 12, 6);
-        bool compact = s.Layout == "Compact Gaming";
-        var panel = new FrameworkElementFactory(compact ? typeof(StackPanel) : typeof(WrapPanel));
-        if (compact) panel.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
-        else panel.SetValue(WrapPanel.OrientationProperty, s.Layout == "Vertical" ? Orientation.Vertical : Orientation.Horizontal);
-        MetricItems.ItemsPanel = new ItemsPanelTemplate(panel);
-        Grid.SetColumnSpan(MetricScroller, compact ? 1 : 2);
-        Grid.SetRow(OverlayFooter, compact ? 0 : 1);
-        Grid.SetColumn(OverlayFooter, compact ? 1 : 0);
-        Grid.SetColumnSpan(OverlayFooter, compact ? 1 : 2);
-        StatusText.Visibility = compact ? Visibility.Collapsed : Visibility.Visible;
-        MetricScroller.HorizontalScrollBarVisibility = compact ? ScrollBarVisibility.Auto : ScrollBarVisibility.Disabled;
-        MetricScroller.VerticalScrollBarVisibility = compact ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto;
         var monitors = DisplayInterop.Monitors();
         if (monitors.Length == 0) return;
         var monitor = monitors[Math.Clamp(s.TargetMonitorIndex, 0, monitors.Length - 1)];
-        double maxWidth = (monitor.WorkRight - monitor.WorkLeft) / monitor.DpiScale - 24;
-        Width = Math.Min(maxWidth, s.Layout == "Vertical" ? 340 : s.Layout == "Expanded" ? 1050 : 850);
-        MaxHeight = Math.Min(240 * s.Scale, (monitor.WorkBottom - monitor.WorkTop) / monitor.DpiScale / 3);
+        ConfigureOverlaySize(s, monitor);
         if (!_dragging) PositionOverlay(s, monitor);
     }
 

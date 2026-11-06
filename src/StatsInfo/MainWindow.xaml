@@ -4,7 +4,7 @@
  xmlns:views="clr-namespace:StatsInfo.Views"
  xmlns:converters="clr-namespace:StatsInfo.Converters"
  Title="StatsInfo Overlay" Icon="pack://application:,,,/StatsInfo;component/Assets/StatsInfo.ico"
- Width="780" SizeToContent="Height" MinHeight="48" MaxHeight="240"
+ Width="780" Height="72" SizeToContent="Manual" ResizeMode="NoResize"
  WindowStyle="None" AllowsTransparency="True" Background="Transparent"
  Topmost="{Binding IsPinned}" ShowInTaskbar="False" WindowStartupLocation="Manual">
  <Window.Resources>
@@ -18,12 +18,11 @@
   Opacity="{Binding Opacity}" Padding="12,6">
   <Grid x:Name="OverlayGrid">
    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-   <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-   <ScrollViewer x:Name="MetricScroller" Grid.ColumnSpan="2"
+   <ScrollViewer x:Name="MetricScroller" Grid.Column="0"
     VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
-    MaxHeight="175" PreviewMouseLeftButtonDown="DragHandle_MouseLeftButtonDown">
+    PreviewMouseLeftButtonDown="DragHandle_MouseLeftButtonDown">
     <ItemsControl x:Name="MetricItems" ItemsSource="{Binding VisibleMetrics}">
-     <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+     <ItemsControl.ItemsPanel><ItemsPanelTemplate><views:ResponsiveMetricPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
      <ItemsControl.ItemTemplate><DataTemplate>
       <Border Padding="5,3" Margin="{DynamicResource MetricSpacing}" ToolTip="{Binding Tooltip}"
        MouseRightButtonUp="Metric_RightClick" Cursor="Hand">
@@ -47,16 +46,23 @@
      </DataTemplate></ItemsControl.ItemTemplate>
     </ItemsControl>
    </ScrollViewer>
-   <DockPanel x:Name="OverlayFooter" Grid.Row="1" Grid.ColumnSpan="2" Margin="3,2,0,0">
-    <Button DockPanel.Dock="Right" Click="CloseButton_Click" Content="×" Width="28" Height="24"
-     ToolTip="Close StatsInfo" AutomationProperties.Name="Close StatsInfo"
-     Background="Transparent" Foreground="#F38BA8" BorderThickness="0"/>
-    <Button DockPanel.Dock="Right" Click="SettingsButton_Click" Content="⚙" Width="28" Height="24"
+   <StackPanel x:Name="OverlayFooter" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top" Margin="3,0,10,0">
+    <Button Click="SettingsButton_Click" Content="⚙" Width="28" Height="24"
      ToolTip="Settings" AutomationProperties.Name="Settings"
      Background="Transparent" Foreground="{DynamicResource OverlayForeground}" BorderThickness="0"/>
-    <TextBlock x:Name="StatusText" Text="{Binding MonitorState}" Foreground="{DynamicResource OverlayForeground}"
-     FontSize="10" VerticalAlignment="Center" ToolTip="Ctrl+Shift+F10 recovers the overlay by default"/>
-   </DockPanel>
+    <Button Click="CloseButton_Click" Content="×" Width="24" Height="24"
+     ToolTip="Close StatsInfo" AutomationProperties.Name="Close StatsInfo"
+     Background="Transparent" Foreground="#F38BA8" BorderThickness="0"/>
+   </StackPanel>
+   <Thumb x:Name="ResizeHandle" Grid.Column="1" Width="16" Height="16"
+    HorizontalAlignment="Right" VerticalAlignment="Bottom" Cursor="SizeNWSE"
+    ToolTip="Drag to resize. Metrics wrap to fit." AutomationProperties.Name="Resize overlay"
+    DragStarted="ResizeHandle_DragStarted" DragDelta="ResizeHandle_DragDelta" DragCompleted="ResizeHandle_DragCompleted">
+    <Thumb.Template><ControlTemplate TargetType="Thumb">
+     <Grid Background="Transparent"><Path Data="M 4,14 L 14,4 M 9,14 L 14,9"
+      Stroke="{DynamicResource OverlayAccent}" StrokeThickness="1.5"/></Grid>
+    </ControlTemplate></Thumb.Template>
+   </Thumb>
   </Grid>
  </Border>
 </Window>

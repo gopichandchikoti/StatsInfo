@@ -25,6 +25,8 @@ public static class MetricSettings
         s.SchemaVersion = 2;
         s.Opacity = FiniteClamp(s.Opacity, 0.2, 1, 0.85);
         s.Scale = FiniteClamp(s.Scale, 0.75, 2, 1);
+        s.OverlayWidth = FiniteClamp(s.OverlayWidth, 0, 20000, 0);
+        s.OverlayHeight = FiniteClamp(s.OverlayHeight, 0, 20000, 0);
         s.FontSize = FiniteClamp(s.FontSize, 10, 24, 12);
         s.MetricSpacing = FiniteClamp(s.MetricSpacing, 0, 24, 6);
         s.UpdateIntervalMs = Math.Clamp(s.UpdateIntervalMs, 500, 10000);

@@ -7,6 +7,9 @@ public class AppSettings
     public int SchemaVersion { get; set; } = 1;
     public Dictionary<string, MetricPreference> Metrics { get; set; } = new();
     public string Layout { get; set; } = "Horizontal";
+    // Zero uses the layout's initial size. User dimensions are device-independent pixels.
+    public double OverlayWidth { get; set; }
+    public double OverlayHeight { get; set; }
     public bool LockPosition { get; set; }
     public double FontSize { get; set; } = 12;
     public string FontFamily { get; set; } = "Segoe UI";
