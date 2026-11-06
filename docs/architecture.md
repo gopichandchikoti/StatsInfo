@@ -79,7 +79,7 @@ The eight Settings sections are Visible Metrics, Overlay & Appearance, Sampling 
 | --- | --- |
 | `CpuMemorySource` | Windows CPU counters, per-core usage, logical processor count, physical and committed memory; counters need warm-up samples |
 | `GpuEngineSource` | Adapter-specific engine counters, process GPU usage, dedicated VRAM usage, DXGI identity and 64-bit dedicated capacity; shared memory is not substituted for dedicated VRAM |
-| `HardwareSensorSource` | CPU/GPU temperatures, powers, clocks, voltages, fans and supported drive sensors; explicit LibreHardwareMonitor opt-in and device-specific support required |
+| `HardwareSensorSource` | CPU/GPU temperatures, powers, clocks, voltages, fans and supported drive sensors; explicit LibreHardwareMonitor opt-in and device-specific support required. CPU sensors also need the separately installed signed PawnIO 2.2+ driver (`HardwareSensorAccess` checks it and reports missing driver, denied access or unavailable device as distinct reasons); a user-selected temperature sensor is labeled with its native name |
 | `StorageMetricsSource` | Disk throughput and active time; selected-volume free space; depends on Windows counter availability |
 | `NetworkMetricsSource` | Selected/automatic/aggregate adapter deltas, daily traffic and WLAN; aggregate mode may double-count VPN traffic |
 | `LatencyMetricsSource` | Opt-in ICMP latency, loss and jitter to the user's chosen endpoint; no default external probe |

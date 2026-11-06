@@ -66,6 +66,9 @@ public partial class SettingsWindow : Window
         if (_viewModel.Service.LastError != null) SaveState.Text = _viewModel.Service.LastError;
         else if (_runtime?.PersistenceError != null) SaveState.Text = _runtime.PersistenceError;
         _viewModel.RefreshMetrics(_runtime);
+        _temperatureStatus.Text = string.Join("\n", _viewModel.Metrics
+            .Where(m => m.Id is "cpu.temperature.package" or "gpu.temperature.core")
+            .Select(m => $"{m.DisplayLabel}: {m.ValueText}. {m.AvailabilityReason}"));
         _captureStatus.Text = _runtime?.Source<PresentMonSource>()?.Status ?? "No frame capture source connected.";
         _overhead.Text = _runtime == null ? "No runtime connected." :
             string.Join("\n", _runtime.CollectorMilliseconds.OrderBy(p => p.Key)

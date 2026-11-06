@@ -26,7 +26,7 @@ public enum SampleQuality { Valid, Stale, Unavailable, PermissionDenied, Error, 
 public sealed record MetricSample(
     string Id, double? Value, string Unit, DateTimeOffset SampledAt, string Source,
     SampleQuality Quality = SampleQuality.Valid, string? Reason = null,
-    string? Text = null, IReadOnlyDictionary<string, double>? Values = null)
+    string? Text = null, IReadOnlyDictionary<string, double>? Values = null, string? LabelOverride = null)
 {
     public bool IsNumeric => Quality == SampleQuality.Valid && Value is double value && double.IsFinite(value);
     public static MetricSample Missing(string id, string reason, SampleQuality quality = SampleQuality.Unavailable) =>

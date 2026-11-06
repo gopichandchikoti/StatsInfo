@@ -15,7 +15,8 @@ public partial class MetricItemViewModel : ObservableObject
     public sealed record RoundingChoice(int Value, string Label);
     public RoundingChoice[] RoundingOptions { get; } = [new(-1, "Auto"), new(0, "0 decimals"),
         new(1, "1 decimal"), new(2, "2 decimals"), new(3, "3 decimals")];
-    public string DisplayLabel => string.IsNullOrWhiteSpace(CustomLabel) ? Definition.ShortLabel : CustomLabel;
+    public string DisplayLabel => string.IsNullOrWhiteSpace(CustomLabel)
+        ? Sample?.LabelOverride ?? Definition.ShortLabel : CustomLabel;
     public string[] UnitOptions => Definition.Unit switch
     {
         "°C" => ["Default", "°C", "°F"],
@@ -101,6 +102,7 @@ public partial class MetricItemViewModel : ObservableObject
     public void Update(MetricSample sample, IReadOnlyDictionary<string, MetricSample> samples)
     {
         Sample = sample;
+        OnPropertyChanged(nameof(DisplayLabel));
         ValueText = MetricFormatter.Format(sample, _settings.Settings.Metrics[Id], _settings.Settings, samples);
         Source = sample.Source;
         IsAvailable = sample.Quality == SampleQuality.Valid;

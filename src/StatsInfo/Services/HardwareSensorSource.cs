@@ -7,7 +7,13 @@ public sealed class HardwareSensorSource : IMetricSource
 {
     private Computer? _computer;
     private readonly Func<AppSettings, IHardware[]>? _hardwareProvider;
-    public HardwareSensorSource(Func<AppSettings, IHardware[]>? hardwareProvider = null) => _hardwareProvider = hardwareProvider;
+    private readonly Func<SensorAccessIssue?> _cpuAccessIssue;
+    public HardwareSensorSource(Func<AppSettings, IHardware[]>? hardwareProvider = null,
+        Func<SensorAccessIssue?>? cpuAccessIssue = null)
+    {
+        _hardwareProvider = hardwareProvider;
+        _cpuAccessIssue = cpuAccessIssue ?? (hardwareProvider == null ? HardwareSensorAccess.CpuIssue : () => null);
+    }
     private readonly object _gate = new();
     public bool IsOpen => _computer != null;
     public string Category => "Sensors";
@@ -20,6 +26,8 @@ public sealed class HardwareSensorSource : IMetricSource
     public string[] GpuNames { get; private set; } = [];
     public string[] DriveNames { get; private set; } = [];
     public IReadOnlyDictionary<string, string> SensorInventory { get; private set; } = new Dictionary<string, string>();
+    public IReadOnlyDictionary<string, string> CpuTemperatureSensors { get; private set; } = new Dictionary<string, string>();
+    public IReadOnlyDictionary<string, string> GpuTemperatureSensors { get; private set; } = new Dictionary<string, string>();
 
     public Task<IReadOnlyList<MetricSample>> ReadAsync(AppSettings settings, IReadOnlySet<string> requested,
         CancellationToken token)
@@ -33,7 +41,8 @@ public sealed class HardwareSensorSource : IMetricSource
                 return Task.FromResult<IReadOnlyList<MetricSample>>(MetricIds.Where(id =>
                     id is not "gpu.usage.total" and not "gpu.active_adapter" and not "gpu.vram.used" and not "gpu.vram.total")
                     .Select(id => MetricSample.Missing(id,
-                        "Hardware sensors are off. Explicitly enable LibreHardwareMonitor in Diagnostics; it may load a kernel driver."))
+                        "Temperature and hardware sensors are disabled. In Settings, click Enable temperature sensors " +
+                        "or enable hardware monitoring in Hardware & Diagnostics."))
                     .ToArray());
             }
             var roots = _hardwareProvider?.Invoke(settings) ?? ReadHardware(requested);
@@ -47,10 +56,17 @@ public sealed class HardwareSensorSource : IMetricSource
             var gpus = all.Where(IsGpu).ToArray();
             var gpu = settings.SensorGpuName == "Auto" ? gpus.FirstOrDefault()
                 : gpus.FirstOrDefault(h => h.Name == settings.SensorGpuName);
+            CpuTemperatureSensors = TemperatureChoices(cpu);
+            GpuTemperatureSensors = TemperatureChoices(gpu);
             var drives = all.Where(h => h.HardwareType == HardwareType.Storage).ToArray();
             var drive = settings.StorageSensorName == "Auto" ? drives.FirstOrDefault()
                 : drives.FirstOrDefault(h => h.Name == settings.StorageSensorName);
-            return Task.FromResult<IReadOnlyList<MetricSample>>(ReadSensors(cpu, gpu, drive, all, settings));
+            var samples = ReadSensors(cpu, gpu, drive, all, settings);
+            if (cpu != null && _cpuAccessIssue() is { } issue)
+                for (int i = 0; i < samples.Count; i++)
+                    if (samples[i].Id.StartsWith("cpu.") && samples[i].Id != "cpu.fan.rpm")
+                        samples[i] = MetricSample.Missing(samples[i].Id, issue.Reason, issue.Quality);
+            return Task.FromResult<IReadOnlyList<MetricSample>>(samples);
         }
     }
 
@@ -71,11 +87,12 @@ public sealed class HardwareSensorSource : IMetricSource
     {
         var result = new List<MetricSample>
         {
-            Read("cpu.temperature.package", cpu, SensorType.Temperature, "Package"),
+            Temperature("cpu.temperature.package", cpu, settings,
+                "CPU Package", "Package", "Core (Tdie)", "Core (Tctl/Tdie)", "Core (Tctl)"),
             Read("cpu.power.package", cpu, SensorType.Power, "Package"),
             Read("cpu.voltage", cpu, SensorType.Voltage, "CPU"),
             Read("gpu.usage.total", gpu, SensorType.Load, "Core"),
-            Read("gpu.temperature.core", gpu, SensorType.Temperature, "Core"),
+            Temperature("gpu.temperature.core", gpu, settings, "GPU Core", "GPU Temperature", "GPU Die", "Core"),
             Read("gpu.temperature.hotspot", gpu, SensorType.Temperature, "Hot Spot", "Hotspot"),
             Read("gpu.power.board", gpu, SensorType.Power, "Board", "Total"),
             Read("gpu.clock.core", gpu, SensorType.Clock, "Core"),
@@ -117,6 +134,34 @@ public sealed class HardwareSensorSource : IMetricSource
     {
         var sensor = Valid(hardware, type).FirstOrDefault(s => names.Any(n => s.Name.Contains(n, StringComparison.OrdinalIgnoreCase)));
         return FromSensor(id, sensor);
+    }
+
+    private static IReadOnlyDictionary<string, string> TemperatureChoices(IHardware? hardware) =>
+        hardware?.Sensors.Where(s => s.SensorType == SensorType.Temperature)
+            .ToDictionary(s => s.Identifier.ToString(), s => s.Name) ?? new Dictionary<string, string>();
+
+    private static MetricSample Temperature(string id, IHardware? hardware, AppSettings settings, params string[] automaticNames)
+    {
+        string selected = settings.SensorSelections.GetValueOrDefault(id, "") ?? "";
+        var sensors = Valid(hardware, SensorType.Temperature).ToArray();
+        var sensor = selected.Length > 0
+            ? sensors.FirstOrDefault(s => s.Identifier.ToString() == selected)
+            : automaticNames.Select(name => sensors.FirstOrDefault(s => s.Name.Equals(name,
+                StringComparison.OrdinalIgnoreCase))).FirstOrDefault(s => s != null);
+        if (sensor == null)
+        {
+            string choices = string.Join(", ", sensors.Select(s => s.Name));
+            return MetricSample.Missing(id, selected.Length > 0
+                ? "The selected temperature sensor is unavailable on the selected device. Choose another sensor in Hardware & Diagnostics."
+                : $"No matching package/die or GPU core sensor is exposed by {hardware?.Name ?? "the selected device"}. " +
+                  (choices.Length > 0 ? $"Available temperature sensors: {choices}. Choose one in Hardware & Diagnostics; its native name will be shown."
+                      : "Check sensor setup and device support in Hardware & Diagnostics."));
+        }
+        if (sensor.Value == 0)
+            return MetricSample.Missing(id, "The sensor returned zero before hardware access was ready. Check sensor setup in Hardware & Diagnostics.",
+                SampleQuality.WarmingUp);
+        var sample = FromSensor(id, sensor);
+        return selected.Length > 0 ? sample with { LabelOverride = sensor.Name } : sample;
     }
 
     private static MetricSample Chosen(string id, IEnumerable<ISensor> sensors, AppSettings settings)

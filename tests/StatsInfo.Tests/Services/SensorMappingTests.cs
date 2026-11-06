@@ -57,7 +57,7 @@ public class SensorMappingTests
             Assert.Equal(SampleQuality.Unavailable, samples.Single(m => m.Id == id).Quality);
     }
 
-    private static IHardware Hardware(string name, HardwareType type, params (string Name, SensorType Type, float Value)[] values)
+    internal static IHardware Hardware(string name, HardwareType type, params (string Name, SensorType Type, float Value)[] values)
     {
         var hardware = new Mock<IHardware>();
         hardware.SetupGet(h => h.Name).Returns(name);

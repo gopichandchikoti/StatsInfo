@@ -42,6 +42,8 @@
        AutomationProperties.Name="Metric group"/>
       <Button Content="Show group" Click="ShowGroup_Click"/>
       <Button Content="Hide group" Click="HideGroup_Click"/>
+      <Button Content="Enable temperature sensors" Click="EnableTemperatureSensors_Click"
+       ToolTip="Enable local hardware readings. CPU sensors require signed PawnIO and hardware access."/>
       <ComboBox x:Name="PresetSelection" Width="130" ItemsSource="{Binding PresetNames}" SelectedIndex="5"
        AutomationProperties.Name="Overlay preset"/>
       <Button Content="Apply preset…" Click="ApplyPreset_Click"/>

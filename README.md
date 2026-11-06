@@ -50,6 +50,10 @@ Right-click a metric to view its history. The tray menu can show or hide the ove
 
 Settings are stored in `%APPDATA%\StatsInfo\settings.json`. The app preserves existing preferences when upgrading. When many metrics cannot fit within the selected monitor's work area, scrolling keeps them reachable.
 
+## Temperature sensors
+
+CPU and GPU usage work out of the box. Temperatures, power and fan speeds need hardware access, which is off until you choose **Enable temperature sensors** in Settings. GPU temperature then works through your graphics driver. CPU temperature also needs the separately installed, signed [PawnIO](https://pawnio.eu/) driver (version 2.2 or newer) and may need **Run as administrator**; StatsInfo never installs a driver for you, and it says what is missing instead of showing a guess. Under **Hardware & Diagnostics** you can pick a specific CPU or GPU temperature sensor, and the overlay then shows that sensor's own name.
+
 ## Build and run from source
 
 Install the .NET 8 SDK on Windows, then run from the repository root:
@@ -74,6 +78,6 @@ Add `-ProfilePath artifacts/qa/my-profile/settings.json` for isolated preference
 dotnet test StatsInfo.sln -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=90 /p:ThresholdType=line /p:ThresholdStat=total
 ```
 
-CI runs the tests and requires at least 90% line coverage. Version tags such as `v2.1.2` build a self-contained Windows app and Inno Setup installer. Before publishing downloads, the release workflow launches the packaged executable with isolated settings, checks Settings open/reopen and responsive sizing, and keeps screenshots and a verification receipt as workflow artifacts. Pushing source changes alone does not replace an existing release download.
+CI runs the tests and requires at least 90% line coverage. Version tags such as `v2.1.3` build a self-contained Windows app and Inno Setup installer. Before publishing downloads, the release workflow launches the packaged executable with isolated settings, checks Settings open/reopen and responsive sizing, and keeps screenshots and a verification receipt as workflow artifacts. Pushing source changes alone does not replace an existing release download.
 
 Build details, data flow, source coverage, configuration, and release verification are documented in [docs/architecture.md](docs/architecture.md). Third-party license information is in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

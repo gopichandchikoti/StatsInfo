@@ -4,7 +4,7 @@ public static class MetricRegistry
 {
     private const string Catalog = """
 cpu.usage.total|CPU|Total CPU utilization|CPU|%|Windows Processor counter|Sampled utilization across logical processors.
-cpu.temperature.package|CPU|CPU package temperature|CPU temp|°C|LibreHardwareMonitor|Package sensor only; no per-core substitution.
+cpu.temperature.package|CPU|CPU package temperature|CPU temp|°C|LibreHardwareMonitor|Intel package or AMD Tdie/Tctl temperature; explicit sensor choices show their native names.
 cpu.power.package|CPU|CPU package power|CPU power|W|LibreHardwareMonitor|Package power, not whole-system power.
 cpu.clock.effective|CPU|Effective CPU clock|CPU clock|GHz|LibreHardwareMonitor|Average of explicitly effective core clocks, not requested clock.
 cpu.usage.per_core|CPU|Logical processor utilization|Cores|%|Windows Processor counters|Individual logical processor busy time.
@@ -14,7 +14,7 @@ cpu.throttling|CPU|CPU throttling flags|CPU limit||LibreHardwareMonitor|Requires
 cpu.fan.rpm|CPU|CPU cooling fan|CPU fan|RPM|LibreHardwareMonitor|Requires a clearly identified CPU fan sensor.
 cpu.logical_processors|CPU|Logical processor count|Threads|count|Environment.ProcessorCount|Processor count available to this application.
 gpu.usage.total|GPU|GPU utilization|GPU|%|Windows GPU Engine / LibreHardwareMonitor|Busiest engine, never a sum of parallel engines; selected adapter only.
-gpu.temperature.core|GPU|GPU core temperature|GPU temp|°C|LibreHardwareMonitor|Core temperature; not inferred hotspot.
+gpu.temperature.core|GPU|GPU core temperature|GPU temp|°C|LibreHardwareMonitor|Automatic core temperature or an explicitly chosen GPU temperature sensor with its native label.
 gpu.temperature.hotspot|GPU|GPU hotspot temperature|Hotspot|°C|LibreHardwareMonitor|Explicit hotspot sensor required.
 gpu.power.board|GPU|GPU board power|GPU power|W|LibreHardwareMonitor|Explicit board or total GPU power sensor; not chip-only power.
 gpu.clock.core|GPU|GPU core clock|GPU clock|MHz|LibreHardwareMonitor|Exposed core clock for the selected adapter.

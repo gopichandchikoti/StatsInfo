@@ -12,6 +12,8 @@ public partial class SettingsWindow
 {
     private ComboBox _sensorGpu = new(), _counterGpu = new(), _sensorDrive = new();
     private ComboBox _cpuFan = new(), _boardTemperature = new();
+    private ComboBox _cpuTemperature = new(), _gpuTemperature = new();
+    private TextBlock _temperatureStatus = new() { TextWrapping = TextWrapping.Wrap };
     private TextBlock _inventory = new() { TextWrapping = TextWrapping.Wrap };
     private Task<string>? _inventoryRead;
 
@@ -54,10 +56,18 @@ public partial class SettingsWindow
             $"Logical processors: {Environment.ProcessorCount}\nWindows: {Environment.OSVersion.VersionString}\n" +
             "Sources, permissions and timestamps appear below. Device serial numbers are not read.");
         p.Panel.Children.Add(_inventory);
-        p.Check("Enable LibreHardwareMonitor sensors (may load its bundled kernel driver)", "HardwareSensorsEnabled");
-        p.Hint("Explicit opt-in. No automatic elevation. Firmware, drivers or permissions can still prevent readings. " +
-            "Disable this option to release the backend. CPU package/effective clock/board power are never inferred.");
+        p.Check("Enable hardware and temperature sensors", "HardwareSensorsEnabled");
+        p.Hint("CPU sensors require the signed PawnIO 2.2+ driver and Windows hardware access. " +
+            "Install PawnIO, restart StatsInfo, and use Run as administrator if access is denied. " +
+            "GPU driver readings can work without PawnIO. Sensor choices show native names so a VRM or SoC sensor stays clearly identified.");
+        p.Action("Open official PawnIO driver setup page", (_, _) =>
+            Process.Start(new ProcessStartInfo("https://pawnio.eu/") { UseShellExecute = true }));
+        p.Panel.Children.Add(_temperatureStatus);
         _sensorGpu = p.Choice("Sensor GPU", "SensorGpuName", new[] { "Auto" });
+        _cpuTemperature = p.Choice("CPU temperature sensor", "SensorSelections[cpu.temperature.package]",
+            TemperatureOptions(null), "Value", "Key");
+        _gpuTemperature = p.Choice("GPU temperature sensor", "SensorSelections[gpu.temperature.core]",
+            TemperatureOptions(null), "Value", "Key");
         _counterGpu = p.Choice("Monitored GPU (used when hardware sensors are off)", "GpuAdapter",
             new[] { new AdapterChoice("Auto", "Auto: first available GPU") }, "Name", "Id");
         p.Choice("Physical disk for throughput", "DiskInstance", OptionalDiscovery.Read(
@@ -77,6 +87,7 @@ public partial class SettingsWindow
             TextWrapping = TextWrapping.Wrap
         };
         p.Panel.Children.Add(_diagnostics);
+        RefreshHardware();
     }
 
     private void RefreshHardware()
@@ -86,8 +97,25 @@ public partial class SettingsWindow
         _sensorDrive.ItemsSource = new[] { "Auto" }.Concat(sensors?.DriveNames ?? []).ToArray();
         _counterGpu.ItemsSource = _runtime?.Source<GpuEngineSource>()?.AdapterChoices ?? [];
         var inventory = sensors?.SensorInventory ?? new Dictionary<string, string>();
+        _cpuTemperature.ItemsSource = TemperatureOptions(sensors?.CpuTemperatureSensors);
+        _gpuTemperature.ItemsSource = TemperatureOptions(sensors?.GpuTemperatureSensors);
         _cpuFan.ItemsSource = inventory.Where(p => p.Value.Contains("(Fan)")).ToArray();
         _boardTemperature.ItemsSource = inventory.Where(p => p.Value.Contains("(Temperature)")).ToArray();
+    }
+
+    private static KeyValuePair<string, string>[] TemperatureOptions(IReadOnlyDictionary<string, string>? sensors) =>
+        [new("", "Auto: CPU package/die or GPU core"), .. sensors ?? new Dictionary<string, string>()];
+
+    private void EnableTemperatureSensors_Click(object sender, RoutedEventArgs e)
+    {
+        var settings = _viewModel.Service.Settings;
+        settings.HardwareSensorsEnabled = true;
+        _draft.HardwareSensorsEnabled = true;
+        _viewModel.Service.SaveSettings(settings);
+        foreach (var panel in _draftPanels) panel.DataContext = _draft;
+        SaveState.Text = _viewModel.Service.LastError ??
+            "Temperature sensors enabled. CPU access and available GPU temperature choices appear in Hardware & Diagnostics.";
+        RefreshState();
     }
 
     private void RefreshProcesses()

@@ -13,6 +13,8 @@ public static class MetricSettings
         s.SensorSelections ??= new();
         s.MonitorPositions ??= new();
         s.SensorSelections.TryAdd("cpu.fan.rpm", "");
+        s.SensorSelections.TryAdd("cpu.temperature.package", "");
+        s.SensorSelections.TryAdd("gpu.temperature.core", "");
         s.SensorSelections.TryAdd("system.motherboard.temperature", "");
         foreach (var d in MetricRegistry.All)
         {
