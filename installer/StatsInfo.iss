@@ -2,7 +2,7 @@
 #define AppName "StatsInfo"
 #endif
 #ifndef AppVersion
-#define AppVersion "2.1.3"
+#define AppVersion "2.1.4"
 #endif
 #ifndef AppIdentifier
 #define AppIdentifier "{{CBB4A99D-3D82-4C62-9D8F-59302BFDA702}"

@@ -115,6 +115,36 @@ public class OverlayResizeTests
         });
     }
 
+    [Fact]
+    public void ResizeGrip_DragStartAndDelta_KeepTheSizeWithinLimits_AndCompletionSavesIt()
+    {
+        MainWindowSettingsTests.WpfTestHost.Run(() =>
+        {
+            string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+            var settings = new SettingsService(Path.Combine(directory, "settings.json"));
+            using var coordinator = new SamplingCoordinator([]);
+            var overlay = new MainWindow(new OverlayViewModel(coordinator, settings), new SettingsViewModel(settings));
+            try
+            {
+                overlay.Show(); overlay.UpdateLayout();
+                var grip = Find<Thumb>(overlay);
+                double width = overlay.ActualWidth, height = overlay.ActualHeight;
+                grip.RaiseEvent(new DragStartedEventArgs(0, 0) { RoutedEvent = Thumb.DragStartedEvent });
+                // The pointer has not moved since the drag began, so the overlay stays at its starting size.
+                grip.RaiseEvent(new DragDeltaEventArgs(0, 0) { RoutedEvent = Thumb.DragDeltaEvent });
+                Assert.InRange(overlay.Width, overlay.MinWidth, overlay.MaxWidth);
+                Assert.InRange(overlay.Height, overlay.MinHeight, overlay.MaxHeight);
+                Assert.InRange(overlay.Width, width - 2, width + 2);
+                Assert.InRange(overlay.Height, height - 2, height + 2);
+                grip.RaiseEvent(new DragCompletedEventArgs(0, 0, false) { RoutedEvent = Thumb.DragCompletedEvent });
+                var saved = new SettingsService(settings.SettingsPath).Settings;
+                Assert.Equal(overlay.Width, saved.OverlayWidth);
+                Assert.Equal(overlay.Height, saved.OverlayHeight);
+            }
+            finally { overlay.Close(); Directory.Delete(directory, true); }
+        });
+    }
+
     private static void AssertMetricsFit(Window overlay, Panel panel)
     {
         var scroller = Find<ScrollViewer>(overlay);
