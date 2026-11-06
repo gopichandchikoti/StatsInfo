@@ -72,7 +72,14 @@ public class PresentMonSourceTests
                 await target.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5));
                 target.Dispose();
             }
-            Directory.Delete(dir, true);
+            // Windows image mappings or a scanner can briefly retain a just-exited executable.
+            // Keep cleanup mandatory, but allow that transient lock to clear on hosted runners.
+            for (int attempt = 0; ; attempt++)
+            {
+                try { Directory.Delete(dir, true); break; }
+                catch (Exception ex) when (attempt < 49 && ex is IOException or UnauthorizedAccessException)
+                { await Task.Delay(100); }
+            }
         }
     }
 }

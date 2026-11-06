@@ -74,6 +74,6 @@ Add `-ProfilePath artifacts/qa/my-profile/settings.json` for isolated preference
 dotnet test StatsInfo.sln -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=90 /p:ThresholdType=line /p:ThresholdStat=total
 ```
 
-CI runs the tests and requires at least 90% line coverage. Version tags such as `v2.1.1` build a self-contained Windows app and Inno Setup installer. Before publishing downloads, the release workflow launches the packaged executable with isolated settings, checks Settings open/reopen and responsive sizing, and keeps screenshots and a verification receipt as workflow artifacts. Pushing source changes alone does not replace an existing release download.
+CI runs the tests and requires at least 90% line coverage. Version tags such as `v2.1.2` build a self-contained Windows app and Inno Setup installer. Before publishing downloads, the release workflow launches the packaged executable with isolated settings, checks Settings open/reopen and responsive sizing, and keeps screenshots and a verification receipt as workflow artifacts. Pushing source changes alone does not replace an existing release download.
 
 Build details, data flow, source coverage, configuration, and release verification are documented in [docs/architecture.md](docs/architecture.md). Third-party license information is in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
