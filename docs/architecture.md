@@ -102,7 +102,7 @@ The app has no telemetry or cloud account. Process names can appear in explicitl
 
 ## Building, verifying and distributing
 
-Use .NET 8 SDK on Windows. `tools/run-local.ps1` builds Release and launches Settings, or just the overlay with `-OverlayOnly`. `-ProfilePath` isolates preferences; `-VerifyDirectory` captures running windows, metrics and a short overhead sample. It supports `%LOCALAPPDATA%\dotnet` when PATH points to an older runtime.
+Use .NET 8 SDK on Windows. `global.json` selects the 8.0.4xx SDK feature band, including installed patches, so hosted runners use the same SDK as local verification. `tools/run-local.ps1` builds Release and launches Settings, or just the overlay with `-OverlayOnly`. `-ProfilePath` isolates preferences; `-VerifyDirectory` captures running windows, metrics and a short overhead sample. It supports `%LOCALAPPDATA%\dotnet` when PATH points to an older runtime.
 
 ```powershell
 dotnet test StatsInfo.sln -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=90 /p:ThresholdType=line /p:ThresholdStat=total
